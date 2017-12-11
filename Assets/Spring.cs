@@ -19,6 +19,8 @@ public class Spring : MonoBehaviour {
 
     private List<Constraint> m_constraints;
 
+    public GameObject ball;
+
     class Point {
         private static float DAMPING = 0.01f;
         private static float TIME_STEPSIZE2 = 0.5f*0.5f;
@@ -38,10 +40,10 @@ public class Spring : MonoBehaviour {
 		    acceleration += f/mass;
 	    }
 
-        public void updatePoint() {
+        public void updatePoint(float timeStep) {
             if(movable) {
 		        Vector3 temp = position;
-		        position = position + (position-oldPosition)*(1.0f-DAMPING) + acceleration*TIME_STEPSIZE2;
+		        position = position + (position-oldPosition)*(1.0f-DAMPING) + acceleration*timeStep;
 		        oldPosition = temp;
 		        acceleration = new Vector3(0, 0, 0); // acceleration is reset since it HAS been translated into a change in position (and implicitely into velocity)
             }
@@ -98,31 +100,48 @@ public class Spring : MonoBehaviour {
         for (int i = 0; i < sideLength; i++) {
             for (int j = 0; j < sideLength; j++) {
                 int index = i + j * sideLength;
-                Vector3 position = new Vector3(i * 10, j * 10, 0);
+                Vector3 position = new Vector3(i * 5, 0, j * 5);
                 m_points[index] = new Point(position);
                 m_allVertices[index] = position;//points[index].position;
-                m_points[index].addForce(new Vector3(0, 0, -1));
+                //m_points[index].addForce(new Vector3(0, 0, -1));
             }
         }
         for (int i = 0; i < sideLength; i++) {
             for (int j = 0; j < sideLength; j++) {
 
                 //connect immediate neighbours with constraints
-                if (i<sideLength-1) makeConstraint(getParticle(i,j),getParticle(i+1,j));
-				if (j<sideLength-1) makeConstraint(getParticle(i,j),getParticle(i,j+1));
-				if (i<sideLength-1 && j<sideLength-1) makeConstraint(getParticle(i,j),getParticle(i+1,j+1));
-				if (i<sideLength-1 && j<sideLength-1) makeConstraint(getParticle(i+1,j),getParticle(i,j+1));
+                if (i<sideLength-1)
+                    makeConstraint(getParticle(i,j),getParticle(i+1,j));
+
+				if (j<sideLength-1)
+                    makeConstraint(getParticle(i,j),getParticle(i,j+1));
+
+				if (i<sideLength-1 && j<sideLength-1)
+                    makeConstraint(getParticle(i,j),getParticle(i+1,j+1));
+
+				if (i<sideLength-1 && j<sideLength-1)
+                    makeConstraint(getParticle(i+1,j),getParticle(i,j+1));
+
 
                 //connect secondary neighbours with constraints
-                if (i<sideLength-2) makeConstraint(getParticle(i,j),getParticle(i+2,j));
-				if (j<sideLength-2) makeConstraint(getParticle(i,j),getParticle(i,j+2));
-				if (i<sideLength-2 && j<sideLength-2) makeConstraint(getParticle(i,j),getParticle(i+2,j+2));
-				if (i<sideLength-2 && j<sideLength-2) makeConstraint(getParticle(i+2,j),getParticle(i,j+2));			
+                if (i<sideLength-2)
+                    makeConstraint(getParticle(i,j),getParticle(i+2,j));
+
+				if (j<sideLength-2)
+                    makeConstraint(getParticle(i,j),getParticle(i,j+2));
+
+				if (i<sideLength-2 && j<sideLength-2)
+                    makeConstraint(getParticle(i,j),getParticle(i+2,j+2));
+
+				if (i<sideLength-2 && j<sideLength-2)
+                    makeConstraint(getParticle(i+2,j),getParticle(i,j+2));			
             }
         }
 
         for (int i = 0; i < sideLength; i++) {
             getParticle(i,0).movable = false;
+
+            //getParticle(i, sideLength - 1).mass = 5;
         }
 
 
@@ -152,6 +171,10 @@ public class Spring : MonoBehaviour {
         //1. satisfy constraints for all particles
         //2. time step all particles 
 
+        Vector3 ballCenter = ball.transform.position;//new Vector3(50, -38, 0);
+        float ballRadius = 15;
+
+
         Vector3 randomForce = new Vector3(0.5f, 0, 0.2f) * Time.deltaTime;
 
         foreach (Constraint constraint in m_constraints) {
@@ -159,12 +182,21 @@ public class Spring : MonoBehaviour {
         }
 
         foreach (Point point in m_points) {
-            point.addForce(new Vector3(0, -0.2f, 0)); //gravity
-            point.addForce(randomForce);
-            point.updatePoint();
-        }
+            point.addForce(new Vector3(0, -2f, 0)); //gravity
+            //point.addForce(randomForce);
+            point.updatePoint(Time.deltaTime);
 
-        //m_points[0].position = m_points[0].position + new Vector3(0.05f, 0, 0);
+			Vector3 v = point.position - ballCenter;
+			float l = v.magnitude;
+			if (l < ballRadius) // if the particle is inside the ball
+			{
+                if (point.movable) {
+                    point.position += v.normalized*(ballRadius-l);
+                }
+				 // project the particle to the surface of the ball
+			}
+		    
+        }                                                                          
              
         for (int i = 0; i < sideLength; i++) {
             for (int j = 0; j < sideLength; j++) {
