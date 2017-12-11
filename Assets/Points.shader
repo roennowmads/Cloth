@@ -104,13 +104,13 @@
 				fixed albedo = tex2Dlod(_AlbedoTex, float4(i.texCoord, 0.0, 0.0) /*float2(0.5,0.5)*/).a;
 				//fixed albedo = tex2D(_AlbedoTex, i.texCoord /*float2(0.5,0.5)*/).a;
 				
-				//if (albedo < 0.7) 
-				//	discard;
+				if (albedo < 0.5) 
+					discard;
 
 				//o.color = fixed4(/*i.color*/fixed3(0.5,0.1,0.1), albedo*0.0525);
 
 				//good for fireball:
-				o.color = fixed4(/*i.color*/albedo,1.0,1.0, albedo/*albedo*//**0.25*/);
+				o.color = fixed4(/*i.color*/1.0,1.0,1.0, albedo/*albedo*//**0.25*/);
 				return o;
 			}
 			ENDCG
