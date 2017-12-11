@@ -83,7 +83,7 @@
 
 				o.vertex = UnityObjectToClipPos(position);
 
-				half size = 10.0;
+				half size = 50.0;
 				half2 quadSize = half2(size, size * aspect);
 				half2 deltaSize = quadCoords[quad_vertexID] * quadSize;
 				o.vertex.xy += deltaSize;
@@ -110,7 +110,7 @@
 				//o.color = fixed4(/*i.color*/fixed3(0.5,0.1,0.1), albedo*0.0525);
 
 				//good for fireball:
-				o.color = fixed4(/*i.color*/1.0,1.0,1.0, albedo/*albedo*//**0.25*/);
+				o.color = fixed4(/*i.color*/albedo,albedo,albedo, albedo/*albedo*//**0.25*/);
 				return o;
 			}
 			ENDCG
