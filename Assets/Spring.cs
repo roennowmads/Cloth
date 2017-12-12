@@ -21,6 +21,8 @@ public class Spring : MonoBehaviour {
 
     public GameObject ball;
 
+    public float m_windScale;
+
     class Point {
         private static float DAMPING = 0.01f;
         private static float TIME_STEPSIZE2 = 0.5f*0.5f;
@@ -28,7 +30,7 @@ public class Spring : MonoBehaviour {
         public Vector3 position;
         public Vector3 oldPosition;
         public Vector3 acceleration = new Vector3(0,0,0);
-        public float mass = 1.0f;
+        public float mass = 5.0f;
         public bool movable = true;
 
         public Point(Vector3 position) {
@@ -100,14 +102,13 @@ public class Spring : MonoBehaviour {
         for (int i = 0; i < sideLength; i++) {
             for (int j = 0; j < sideLength; j++) {
                 int index = i + j * sideLength;
-                Vector3 position = new Vector3(i * 5, 0, j * 5);
+                Vector3 position = new Vector3(i * 1, 0, j * 1);
                 m_points[index] = new Point(position);
-                m_allVertices[index] = position;//points[index].position;
-                //m_points[index].addForce(new Vector3(0, 0, -1));
+                m_allVertices[index] = position;
             }
         }
-        for (int i = 0; i < sideLength; i++) {
-            for (int j = 0; j < sideLength; j++) {
+        for (int i = sideLength-1; i >= 0; i--) {
+            for (int j = sideLength-1; j >= 0; j--) {
 
                 //connect immediate neighbours with constraints
                 if (i<sideLength-1)
@@ -167,15 +168,15 @@ public class Spring : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
         //1. satisfy constraints for all particles
         //2. time step all particles 
 
-        Vector3 ballCenter = ball.transform.position;//new Vector3(50, -38, 0);
+        Vector3 ballCenter = ball.transform.position + new Vector3(0f, 0f, -5f);//new Vector3(50, -38, 0);
         float ballRadius = 15;
 
 
-        Vector3 randomForce = new Vector3(0.5f, 0, 0.2f) * Time.deltaTime;
+        Vector3 randomForce = new Vector3(/*0.5f*/0, 0, 0.2f) *m_windScale; /** Time.deltaTime*/
 
         foreach (Constraint constraint in m_constraints) {
             constraint.satisfyConstraint();
@@ -183,7 +184,7 @@ public class Spring : MonoBehaviour {
 
         foreach (Point point in m_points) {
             point.addForce(new Vector3(0, -2f, 0)); //gravity
-            //point.addForce(randomForce);
+            point.addForce(randomForce);
             point.updatePoint(Time.deltaTime);
 
 			Vector3 v = point.position - ballCenter;
@@ -193,7 +194,6 @@ public class Spring : MonoBehaviour {
                 if (point.movable) {
                     point.position += v.normalized*(ballRadius-l);
                 }
-				 // project the particle to the surface of the ball
 			}
 		    
         }                                                                          

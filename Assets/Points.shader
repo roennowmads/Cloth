@@ -83,7 +83,7 @@
 
 				o.vertex = UnityObjectToClipPos(position);
 
-				half size = 20.0;
+				half size = 10.0;
 				half2 quadSize = half2(size, size * aspect);
 				half2 deltaSize = quadCoords[quad_vertexID] * quadSize;
 				o.vertex.xy += deltaSize;
