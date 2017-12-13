@@ -139,7 +139,7 @@ public class Spring : MonoBehaviour {
             }
         }
 
-        for (int i = 0; i < sideLength; i++) {
+        for (int i = 0; i < sideLength; i+=10) {
             getParticle(i,0).movable = false;
 
             //getParticle(i, sideLength - 1).mass = 5;
@@ -172,7 +172,7 @@ public class Spring : MonoBehaviour {
         //1. satisfy constraints for all particles
         //2. time step all particles 
 
-        Vector3 ballCenter = ball.transform.position + new Vector3(0f, 0f, -5f);//new Vector3(50, -38, 0);
+        Vector3 ballCenter = ball.transform.position;//new Vector3(50, -38, 0);
         float ballRadius = 15;
 
 
