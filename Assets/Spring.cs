@@ -44,14 +44,43 @@ public class Spring : MonoBehaviour {
             force = f;
 	    }
 
+        private Vector3 filter(Vector3 a) {
+            return a; //only different from a if the point is constrained on something like an axis. 
+        }
+
+        private void preconditionedConjucateGradient() {
+            Vector3 deltaVelocity = new Vector3(0, 0, 0); //unconstrained
+
+            Vector4 b = new Vector4();
+            Matrix4x4 P = new Matrix4x4();
+            Matrix4x4 A = new Matrix4x4();
+
+            float epsilon = 0.001f;
+            float epsilonSquared = epsilon * epsilon;
+
+            //Vector4 a  = P * b;
+
+            float deltaZero = Vector3.Dot(Matrix4x4.Transpose(P) * b, b); // i think the transpose is correct
+            Vector4 r = b - A * deltaVelocity;
+            Vector3 c = Matrix4x4.Inverse(P) * r;
+            float deltaNew = Vector3.Dot(r, c);
+            while (deltaNew > epsilonSquared * deltaZero) {
+                Vector4 q = A * c;
+                float alpha = deltaNew / (Vector3.Dot(c, q));
+                deltaVelocity += alpha * c;
+                r -= alpha * q;
+                Vector3 s = Matrix4x4.Inverse(P) * r;
+                float deltaOld = deltaNew;
+                deltaNew = Vector3.Dot(r, s);
+                c = s + (deltaNew / deltaOld) * c;
+            }
+        }
+
         public void updatePoint(float timeStep) {
-            //if(movable) {
-		        Vector3 temp = position;
-		        position = position + (position-oldPosition)*(1.0f-DAMPING) + /*acceleration*/(force * massInverse)*timeStep;
-		        oldPosition = temp;
-                //acceleration = new Vector3(0, 0, 0); // acceleration is reset since it HAS been translated into a change in position (and implicitely into velocity)
-                force = new Vector3(0, 0, 0);
-            //}
+		    Vector3 temp = position;
+		    position = position + (position-oldPosition)*(1.0f-DAMPING) + /*acceleration*/(force * massInverse)*timeStep;
+		    oldPosition = temp;
+            force = new Vector3(0, 0, 0);
 	    }
     }
 
