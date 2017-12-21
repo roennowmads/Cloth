@@ -29,9 +29,10 @@ public class Spring : MonoBehaviour {
 
         public Vector3 position;
         public Vector3 oldPosition;
-        public Vector3 acceleration = new Vector3(0,0,0);
-        public float mass = 5.0f;
-        public bool movable = true;
+        //public Vector3 acceleration = new Vector3(0,0,0);
+        public Vector3 force = new Vector3(0,0,0);
+        public float massInverse = 1.0f / 10.0f;
+        //public bool movable = true;
 
         public Point(Vector3 position) {
             this.position = position;
@@ -39,16 +40,18 @@ public class Spring : MonoBehaviour {
         }
 
         public void addForce(Vector3 f) {
-		    acceleration += f/mass;
+            //acceleration += f/mass;
+            force = f;
 	    }
 
         public void updatePoint(float timeStep) {
-            if(movable) {
+            //if(movable) {
 		        Vector3 temp = position;
-		        position = position + (position-oldPosition)*(1.0f-DAMPING) + acceleration*timeStep;
+		        position = position + (position-oldPosition)*(1.0f-DAMPING) + /*acceleration*/(force * massInverse)*timeStep;
 		        oldPosition = temp;
-		        acceleration = new Vector3(0, 0, 0); // acceleration is reset since it HAS been translated into a change in position (and implicitely into velocity)
-            }
+                //acceleration = new Vector3(0, 0, 0); // acceleration is reset since it HAS been translated into a change in position (and implicitely into velocity)
+                force = new Vector3(0, 0, 0);
+            //}
 	    }
     }
 
@@ -74,13 +77,12 @@ public class Spring : MonoBehaviour {
 		    Vector3 correctionVector = p1_to_p2*(1 - rest_distance/current_distance); // The offset vector that could moves p1 into a distance of rest_distance to p2
 		    Vector3 correctionVectorHalf = correctionVector*0.5f; // Lets make it half that length, so that we can move BOTH p1 and p2.
 
-            if (p1.movable)
-                p1.position += correctionVectorHalf; // correctionVectorHalf is pointing from p1 to p2, so the length should move p1 half the length needed to satisfy the constraint.
+            //if (p1.movable)
+                p1.position += p1.massInverse*correctionVectorHalf; // correctionVectorHalf is pointing from p1 to p2, so the length should move p1 half the length needed to satisfy the constraint.
 
-            if (p2.movable)
-                p2.position += -correctionVectorHalf; // we must move p2 the negative direction of correctionVectorHalf since it points from p2 to p1, and not p1 to p2.	
+            //if (p2.movable)
+                p2.position += -p2.massInverse*correctionVectorHalf; // we must move p2 the negative direction of correctionVectorHalf since it points from p2 to p1, and not p1 to p2.	
 	    }
-
     };
 
     private Point getParticle(int i, int j) {
@@ -111,51 +113,40 @@ public class Spring : MonoBehaviour {
             for (int j = sideLength-1; j >= 0; j--) {
 
                 //connect immediate neighbours with constraints
-                if (i<sideLength-1)
-                    makeConstraint(getParticle(i,j),getParticle(i+1,j));
+                if (i < sideLength-1)
+                    makeConstraint(getParticle(i,j), getParticle(i+1,j));
 
-				if (j<sideLength-1)
-                    makeConstraint(getParticle(i,j),getParticle(i,j+1));
+				if (j < sideLength-1)
+                    makeConstraint(getParticle(i,j), getParticle(i,j+1));
 
-				if (i<sideLength-1 && j<sideLength-1)
-                    makeConstraint(getParticle(i,j),getParticle(i+1,j+1));
+				if (i < sideLength-1 && j < sideLength-1)
+                    makeConstraint(getParticle(i,j), getParticle(i+1,j+1));
 
-				if (i<sideLength-1 && j<sideLength-1)
-                    makeConstraint(getParticle(i+1,j),getParticle(i,j+1));
+				if (i < sideLength-1 && j < sideLength-1)
+                    makeConstraint(getParticle(i+1,j), getParticle(i,j+1));
 
 
                 //connect secondary neighbours with constraints
-                if (i<sideLength-2)
-                    makeConstraint(getParticle(i,j),getParticle(i+2,j));
+                if (i < sideLength-2)
+                    makeConstraint(getParticle(i,j), getParticle(i+2,j));
 
-				if (j<sideLength-2)
-                    makeConstraint(getParticle(i,j),getParticle(i,j+2));
+				if (j < sideLength-2)
+                    makeConstraint(getParticle(i,j), getParticle(i,j+2));
 
-				if (i<sideLength-2 && j<sideLength-2)
-                    makeConstraint(getParticle(i,j),getParticle(i+2,j+2));
+				if (i < sideLength-2 && j < sideLength-2)
+                    makeConstraint(getParticle(i,j), getParticle(i+2,j+2));
 
-				if (i<sideLength-2 && j<sideLength-2)
-                    makeConstraint(getParticle(i+2,j),getParticle(i,j+2));			
+				if (i < sideLength-2 && j < sideLength-2)
+                    makeConstraint(getParticle(i+2,j), getParticle(i,j+2));			
             }
         }
 
         for (int i = 0; i < sideLength; i+=10) {
-            getParticle(i,0).movable = false;
+            //getParticle(i,0).movable = false;
+            getParticle(i,0).massInverse = 0;
 
             //getParticle(i, sideLength - 1).mass = 5;
         }
-
-
-        /*m_points[0].movable = false;
-        m_points[1].movable = false;
-        m_points[2].movable = false;
-
-        getParticle(sideLength-1,0).movable = false;
-        getParticle(sideLength-2,0).movable = false;
-        getParticle(sideLength-3,0).movable = false;  */
-
-
-
 
         m_material = new Material(m_shader);
 
@@ -169,6 +160,9 @@ public class Spring : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
+        float aspect = Camera.main.GetComponent<Camera>().aspect;
+        m_material.SetFloat("aspect", aspect);
+
         //1. satisfy constraints for all particles
         //2. time step all particles 
 
@@ -180,31 +174,27 @@ public class Spring : MonoBehaviour {
 
         foreach (Constraint constraint in m_constraints) {
             constraint.satisfyConstraint();
-        }
-
-        foreach (Point point in m_points) {
-            point.addForce(new Vector3(0, -2f, 0)); //gravity
-            point.addForce(randomForce);
-            point.updatePoint(Time.deltaTime);
-
-			Vector3 v = point.position - ballCenter;
-			float l = v.magnitude;
-			if (l < ballRadius) // if the particle is inside the ball
-			{
-                if (point.movable) {
-                    point.position += v.normalized*(ballRadius-l);
-                }
-			}
-		    
-        }                                                                          
+        }                                                                        
              
         for (int i = 0; i < sideLength; i++) {
             for (int j = 0; j < sideLength; j++) {
                 int index = i + j * sideLength;
-                //do stuff to point here
-                //m_points[index].position = m_points[index].position + new Vector3(0.005f, 0, 0);
+                Point point = m_points[index];
 
-                m_allVertices[index] = m_points[index].position;
+                point.addForce(new Vector3(0, -0.5f, 0)); //gravity
+                //point.addForce(randomForce);
+                point.updatePoint(Time.deltaTime);
+
+			    Vector3 v = point.position - ballCenter;
+			    float l = v.magnitude;
+			    if (l < ballRadius) // if the particle is inside the ball
+			    {
+                    //if (point.movable) {
+                        point.position += point.massInverse*v.normalized*(ballRadius-l);
+                    //}
+			    }
+
+                m_allVertices[index] = point.position;
             }
         }
         m_pointsBuffer.SetData(m_allVertices); 
